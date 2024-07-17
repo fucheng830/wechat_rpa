@@ -15,7 +15,11 @@ class SendMessageRequest(BaseModel):
 
 class SendUrlRequest(BaseModel):
     url: str
-    target: List[str]
+    target: List[str] 
+
+class SendCopyUrlRequest(BaseModel):
+    url: str
+
 
 @app.post("/login")
 async def login():
@@ -76,6 +80,21 @@ async def send_url(request: SendUrlRequest):
     wechat = WeChat(first.handle, first.process_id, 0)
     wechat.send_url(request.dict())
     return {"message": "URL sent successfully"}
+
+@app.post("/copy_url")
+async def send_url(request: SendCopyUrlRequest):
+    wechat_pid = find_process_id_by_name("WeChat.exe")
+    if not wechat_pid:
+        raise HTTPException(status_code=404, detail="WeChat process not found")
+    
+    elements = WeChat.find_elements(wechat_pid)
+    if not elements:
+        raise HTTPException(status_code=404, detail="WeChat window not found")
+    
+    first = elements[0]
+    wechat = WeChat(first.handle, first.process_id, 0)
+    res = wechat.copy_url(request.dict())
+    return {"data": res}
 
 if __name__ == "__main__":
     import uvicorn
