@@ -5,7 +5,7 @@ from pywinauto.findwindows import find_elements
 from pyzbar import pyzbar
 
 from app import UiaApp, AppConfig, AppUser, MessageType
-
+import time
 import psutil
 
 def find_process_id_by_name(process_name):
@@ -155,6 +155,7 @@ class WeChat(UiaApp):
                         break
                     except Exception as e:
                         logging.error(e)
+                        time.sleep(5)
                         continue
 
                 # 进一步筛选窗口，确保找到正确的窗口
@@ -173,11 +174,65 @@ class WeChat(UiaApp):
                 search_edit.type_keys('{ENTER}')
 
                 select_window.child_window(title='发送', control_type='Button').click_input()
+                
             except Exception as e:
                 logging.error(e)
 
 
+    def copy_url(self, data):
+        """
+        data['url']
+        """
+        from pywinauto.findwindows import find_elements
+        import pyperclip
+        logging.debug('Send url, handle: %d, data: %s', self.handle, data)
+        wechat_app = self.connect(self.handle)
+        wechat_window = wechat_app.window(class_name="WeChatMainWndForPC")
+        view_button = wechat_window.child_window(control_type='Button', title='看一看')
+        logging.debug(view_button)
+        view_button.click_input()
+        elements = find_elements(class_name='Chrome_WidgetWin_0')
 
+        view_app = self.connect(elements[0].handle)
+        view_window = view_app.window(class_name="Chrome_WidgetWin_0")
+        table_elements = view_window.child_window(control_type='Tab')
+
+        panes = table_elements.children()
+        # 假设我们要找到并点击第二个窗格
+        if len(panes) > 1:
+            second_pane = panes[1]  # 第二个窗格的索引是1
+            second_pane.click_input()     # 执行点击操作
+        else:
+            print("没有找到第二个窗格")
+
+        search_edit = view_window.child_window(control_type='Edit', title='地址和搜索栏')
+        search_edit.click_input()
+        search_edit.type_keys(data['url'])
+        search_edit.type_keys('{ENTER}')
+        for i in range(3):
+            try:
+                more_button = view_window.child_window(title='更多')
+                more_button.click_input()
+                time.sleep(3)
+
+                view_window.child_window(title='复制链接').click_input()
+                clipboard_content = pyperclip.paste()
+
+                print("Clipboard content:", clipboard_content)
+                if clipboard_content:
+                    close_buttons = view_window.descendants(title='关闭', control_type='Button')
+                    
+                    if close_buttons:
+                        # 打印所有匹配的“关闭”按钮的信息
+                        for idx, btn in enumerate(close_buttons):
+                            print(f"Button {idx}: {btn}")
+
+                            # 假设我们需要点击第一个匹配的“关闭”按钮
+                            btn.click_input()
+                    return clipboard_content
+            except Exception as e:
+                logging.error(e, exc_info=1)
+                time.sleep(3)
 
 
     def send_group_messages(self, data):
