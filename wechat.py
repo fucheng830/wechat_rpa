@@ -255,14 +255,21 @@ if __name__ == '__main__':
         print("WeChat process not found.")
 
     elements = WeChat.find_elements(wechat_pid)
+    if not elements:
+        raise Exception("Failed to find WeChat window")
     first = elements[0]
     wechat = WeChat(first.handle, first.process_id, 0)
+    # 判断是否已经登录
+    # if wechat.is_logged_in():
+    #     print("已经登录")
     # wechat.login()
     # wechat.logout()
-    # wechat.send_private_messages({'target': '玲儿响当当', 'messages': [{'type': MessageType.TEXT, 'content': 'test'}]})
-    wechat.send_url({'url':'https://mp.weixin.qq.com/s/4SfQ6NJHRNVuNGmWuWke7A', 'target': ['数字游民社区',
-    'AIGC前沿资讯7群',
-    '游戏玩家交流群']})
+    # 默认已经登录
+
+    wechat.send_private_messages({'target': '玲儿响当当', 'messages': [{'type': MessageType.TEXT, 'content': 'test'}]})
+    # wechat.send_url({'url':'https://mp.weixin.qq.com/s/4SfQ6NJHRNVuNGmWuWke7A', 'target': ['数字游民社区',
+    # 'AIGC前沿资讯7群',
+    # '游戏玩家交流群']})
     # wechat.send_group_messages({'target': 'test', 'messages': [{'type': MessageType.TEXT, 'content': 'test'}])
     # wechat.add_contacts({'target': 'test'})
     # wechat.post_moments({'target': 'test'})
